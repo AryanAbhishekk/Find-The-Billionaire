@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+
+
+
+
+<head>
+    <h3>Find a billionaire</h3>
+    <title>My Algolia Search App</title>
+    <style>
+        body {
+            background-image: url(https://img.freepik.com/free-vector/business-team-looking-new-people-allegory-searching-ideas-staff-woman-with-magnifier-man-with-spyglass-flat-illustration_74855-18236.jpg?w=996&t=st=1665222721~exp=1665223321~hmac=e569483ae78231f87ff9d654a51ae7eb7ec487087681603da15995886add08a8);
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            color: #111827;
+            background-repeat: no-repeat;
+            background-size: cover;
+            margin: 0 0 0 0;
+            overflow-y: hidden;
+        }
+        
+
+        .container {
+            max-width: 500px;
+            margin: 250px auto;
+        }
+
+        .search-container {
+            padding-top: 40px;
+        }
+
+        .search-container .label-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            
+        }
+
+        .search-container .label-container label {
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .search-container .label-container p {
+            font-size: 0.7em;
+            color: #6B7280;
+        }
+
+        .search-container input {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            height: 44px;
+            width: 100%;
+            padding-left: 12px;
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+
+        .hits-container {
+            padding-top: 8px;
+        }
+
+        
+
+        .hits-container .hits .hit {
+            font-size: 0.9em;
+            border-left: 4px solid #60A5FA;
+            background-color: #F3F4F6;
+            padding: 8px 12px;
+            margin: 4px 0;
+        }
+
+        .hits-container .hits .hit span {
+            display: block;
+            margin-top: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.7em;
+            color: #6B7280;
+        }
+        #search-input{
+            border-radius: 30px;
+            border-color: #111827;
+        }
+        h3{
+            margin-left: -30px;
+            margin-top: -5px;
+
+        }
+        h3 {
+  color: hsl(0, 0%, 28%);
+  font-size: 20px;
+  font-weight: bold;
+  font-family: monospace;
+  letter-spacing: 7px;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+h3 {
+  padding: 64px;
+  background: linear-gradient(to right, hsl(0, 0%, 30%) 0, hsl(0, 0%, 100%) 10%, hsl(0, 0%, 30%) 20%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shine 3s infinite linear;
+}
+
+@keyframes shine {
+  0% {
+    background-position: 0;
+  }
+  60% {
+    background-position: 600px;
+  }
+  100% {
+    background-position: 600px;
+  }
+}
+p {
+  color: hsl(0, 0%, 28%);
+  font-size: 20px;
+  font-weight: bold;
+  font-family: monospace;
+  letter-spacing: 2px;
+  cursor: pointer;
+  text-align: center;
+}
+
+p{
+  transition: 0.5s ease-out;
+}
+p:hover {
+  margin-right: 5px;
+}
+
+p:hover {
+  color: #fff;
+  text-shadow: 0 0 10px rgb(11, 10, 10), 0 0 20px rgb(15, 8, 8), 0 0 40px rgb(12, 7, 7);
+}
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="search-container">
+            
+            <input type="text" id="search-input" autofocus="true" name="search"
+                placeholder="Search for a billionaire" />
+        </div>
+
+        <div class="hits-container">
+            <div id="hits" class="hits">
+                <p>Start typing to see results</p>
+            </div>
+        </div>
+    </div>
+    <script type="module">
+        import algoliasearch from 'https://cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch.esm.browser.js';
+
+        const client = algoliasearch('9PMLH72BUB', 'e1410fb6c2f851c3a9ada17a55212fef');
+        const index = client.initIndex('billionaires');
+        let typingTimer; // this holds our JS timeout function
+        let doneTypingInterval = 400; // wait this long (in ms) after user is done typing to query Algolia
+        var input = document.querySelector('input'); // our input field
+        var htmlHits = document.getElementById('hits'); // our search results container as defined in the HTML
+        // event called when the user is typing
+        async function query(val) {
+            htmlHits.innerHTML = ''; // reset the search results container
+
+            // QUERY ALGOLIA HERE
+            let { hits } = await index.search(val, { hitsPerPage: 10 });
+
+            // Loop through the search results and inject a <p> tag into our HTML containing the billionaire's info
+            for (var i = 0; i < hits.length; i++) {
+                let billionaire = hits[i]; // get the current billionaire record
+                htmlHits.innerHTML += `<p class="hit">${billionaire.Name} <span>Rank: ${billionaire.Rank}&nbsp;&nbsp;|&nbsp;&nbsp;Net Worth ${billionaire.NetWorth}</span></p>`;
+            }
+
+            htmlHits.style.display = "block";
+        }
+        input.onkeyup = function (e) {
+            clearTimeout(typingTimer); // clear the JS timeout
+            let input_val = this.value; // get the current value of the text input
+
+            // check if there is anything in the text input
+            if (input_val.length > 0) {
+                // if there is, query Algolia
+                typingTimer = setTimeout(() => query(input_val), doneTypingInterval);
+            } else {
+                // if there isn't, clear the search results
+                hits = [];
+                htmlHits.innerHTML = '<p class="hits-placeholder">Start typing to see results</p>';
+            }
+        }
+        
+        
+    </script>
+</body>
+
+</html>
